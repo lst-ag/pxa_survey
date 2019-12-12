@@ -264,6 +264,8 @@ class SurveyController extends AbstractController
         SurveyMainUtility::clearAnswersSessionData($survey->getUid());
         $this->addSurveyToCookie($survey);
 
+        $this->objectManager->get(PersistenceManager::class)->persistAll();
+
         /** @noinspection PhpUnhandledExceptionInspection */
         $this->redirect('finish', null, null, ['survey' => $survey]);
     }
