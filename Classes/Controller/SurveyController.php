@@ -13,6 +13,7 @@ namespace Pixelant\PxaSurvey\Controller;
  *
  ***/
 
+use GeorgRinger\News\Utility\TypoScript;
 use Pixelant\PxaSurvey\Domain\Model\Answer;
 use Pixelant\PxaSurvey\Domain\Model\Question;
 use Pixelant\PxaSurvey\Domain\Model\Survey;
@@ -20,6 +21,7 @@ use Pixelant\PxaSurvey\Domain\Model\UserAnswer;
 use Pixelant\PxaSurvey\Utility\SurveyMainUtility;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Page\PageRenderer;
+use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
 use TYPO3\CMS\Extbase\Domain\Model\FrontendUser;
@@ -30,6 +32,22 @@ use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
  */
 class SurveyController extends AbstractController
 {
+
+    /**
+     * @var \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface
+     */
+    protected $configurationManager;
+
+    /** @var array */
+    protected $ignoredSettingsForOverride = ['demandclass', 'orderbyallowed', 'selectedList'];
+
+    /**
+     * Original settings without any magic done by stdWrap and skipping empty values
+     *
+     * @var array
+     */
+    protected $originalSettings = [];
+
     /**
      * Include reCAPTCHA api js
      */
@@ -58,9 +76,11 @@ class SurveyController extends AbstractController
      * action show
      *
      * @return void
+     * @throws \TYPO3\CMS\Extbase\Mvc\Exception\StopActionException
      */
     public function showAction()
     {
+
         /** @var Survey $survey */
         $survey = $this->surveyRepository->findByUid((int)$this->settings['survey']);
 
@@ -90,6 +110,7 @@ class SurveyController extends AbstractController
      *
      * @param Survey $survey
      * @param Question $currentQuestion
+     * @throws \TYPO3\CMS\Extbase\Mvc\Exception\StopActionException
      * @validate $survey \Pixelant\PxaSurvey\Domain\Validation\Validator\SurveyAnswerValidator
      * @validate $survey \Pixelant\PxaSurvey\Domain\Validation\Validator\ReCaptchaValidator
      */
@@ -117,6 +138,7 @@ class SurveyController extends AbstractController
      *
      * @param Survey $survey
      * @param bool $alreadyFinished User already finished this survey and is not allowed take it again
+     * @throws \TYPO3\CMS\Extbase\Mvc\Exception\StopActionException
      */
     public function finishAction(Survey $survey, bool $alreadyFinished = false)
     {
@@ -152,6 +174,7 @@ class SurveyController extends AbstractController
      * Get answers from request
      *
      * @return array
+     * @throws \TYPO3\CMS\Extbase\Mvc\Exception\NoSuchArgumentException
      */
     protected function convertRequestToUserAnswersArray()
     {
@@ -215,6 +238,9 @@ class SurveyController extends AbstractController
      *
      * @param Survey $survey
      * @param array $data
+     * @throws \TYPO3\CMS\Extbase\Mvc\Exception\StopActionException
+     * @throws \TYPO3\CMS\Extbase\Mvc\Exception\UnsupportedRequestTypeException
+     * @throws \TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException
      */
     protected function saveResultAndFinish(Survey $survey, array $data)
     {
@@ -392,5 +418,59 @@ class SurveyController extends AbstractController
                     [\PDO::PARAM_INT]
                 );
         }
+    }
+
+    /**
+     * Injects the Configuration Manager and is initializing the framework settings
+     *
+     * @param \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager Instance of the Configuration Manager
+     */
+    public function injectConfigurationManager(
+        \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface $configurationManager
+    )
+    {
+        $this->configurationManager = $configurationManager;
+        $tsSettings = $this->configurationManager->getConfiguration(
+            \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK,
+            'Pixelant.PxaSurvey',
+            'Survey'
+        );
+        $originalSettings = $this->configurationManager->getConfiguration(
+            \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_SETTINGS
+        );
+        $propertiesNotAllowedViaFlexForms = ['orderByAllowed'];
+        foreach ($propertiesNotAllowedViaFlexForms as $property) {
+            $originalSettings[$property] = $tsSettings['settings'][$property];
+        }
+        $this->originalSettings = $originalSettings;
+        // Use stdWrap for given defined settings
+        if (isset($originalSettings['useStdWrap']) && !empty($originalSettings['useStdWrap'])) {
+            $typoScriptService = GeneralUtility::makeInstance(TypoScriptService::class);
+            $typoScriptArray = $typoScriptService->convertPlainArrayToTypoScriptArray($originalSettings);
+            $stdWrapProperties = GeneralUtility::trimExplode(',', $originalSettings['useStdWrap'], true);
+            foreach ($stdWrapProperties as $key) {
+                if (is_array($typoScriptArray[$key . '.'])) {
+                    $originalSettings[$key] = $this->configurationManager->getContentObject()->stdWrap(
+                        $typoScriptArray[$key],
+                        $typoScriptArray[$key . '.']
+                    );
+                }
+            }
+        }
+        // start override
+        if (isset($tsSettings['settings']['overrideFlexformSettingsIfEmpty'])) {
+            $typoScriptUtility = GeneralUtility::makeInstance(TypoScript::class);
+            $originalSettings = $typoScriptUtility->override($originalSettings, $tsSettings);
+        }
+        if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXT']['pxa_survey']['Controller/SurveyController.php']['overrideSettings'])) {
+            foreach ($GLOBALS['TYPO3_CONF_VARS']['EXT']['pxa_survey']['Controller/SurveyController.php']['overrideSettings'] as $_funcRef) {
+                $_params = [
+                    'originalSettings' => $originalSettings,
+                    'tsSettings' => $tsSettings,
+                ];
+                $originalSettings = GeneralUtility::callUserFunction($_funcRef, $_params, $this);
+            }
+        }
+        $this->settings = $originalSettings;
     }
 }
