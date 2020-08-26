@@ -10,7 +10,7 @@
  * "version" and "dependencies" must not be touched!
  ***************************************************************/
 
-$EM_CONF[$_EXTKEY] = [
+$EM_CONF['pxa_survey'] = [
     'title' => 'Simple Survey',
     'description' => 'Create simple survey. Simpel view of result on FE. View results in the BE module',
     'category' => 'plugin',
@@ -18,11 +18,10 @@ $EM_CONF[$_EXTKEY] = [
     'author_email' => '',
     'state' => 'stable',
     'clearCacheOnLoad' => 0,
-    'version' => '1.4.3_lst',
+    'version' => '2.0.0_lst',
     'constraints' => [
         'depends' => [
-            'typo3' => '8.7.0-9.5.99',
-            'php' => '7.0.0-7.2.99'
+            'typo3' => ''
         ],
         'conflicts' => [],
         'suggests' => [],
