@@ -2,7 +2,7 @@
 defined('TYPO3_MODE') || die('Access denied.');
 
 call_user_func(
-    function () {
+    function ($extKey) {
         // Registre hook for plugin preview
         // @codingStandardsIgnoreStart
         $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['list_type_Info']['pxasurvey_survey']['pxa_survey'] =
@@ -60,5 +60,5 @@ call_user_func(
         \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::allowTableOnStandardPages(
             'tx_pxasurvey_domain_model_useranswer'
         );
-    }
+    }, 'pxa_survey'
 );

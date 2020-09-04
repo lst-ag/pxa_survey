@@ -2,7 +2,7 @@
 defined('TYPO3_MODE') || die('Access denied.');
 
 call_user_func(
-    function () {
+    function ($extKey) {
         \TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
             'Pixelant.PxaSurvey',
             'Survey',
@@ -19,5 +19,5 @@ call_user_func(
         \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addPageTSConfig(
             '<INCLUDE_TYPOSCRIPT: source="FILE:EXT:pxa_survey/Configuration/TypoScript/PageTS/wizards.ts">'
         );
-    }
+    }, 'pxa_survey'
 );

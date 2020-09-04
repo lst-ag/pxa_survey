@@ -1,6 +1,8 @@
 <?php
 namespace Pixelant\PxaSurvey\Domain\Model;
 
+use TYPO3\CMS\Extbase\Annotation\ORM\Cascade;
+
 /***
  *
  * This file is part of the "Simple Survey" Extension for TYPO3 CMS.
@@ -42,7 +44,7 @@ class Survey extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity
      * List of question
      *
      * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Pixelant\PxaSurvey\Domain\Model\Question>
-     * @cascade remove
+     * @Cascade(value="remove")
      */
     protected $questions = null;
 

@@ -20,6 +20,7 @@ use Pixelant\PxaSurvey\Domain\Model\Survey;
 use Pixelant\PxaSurvey\Domain\Model\UserAnswer;
 use Pixelant\PxaSurvey\Utility\SurveyMainUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Annotation\Inject;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 
 /**
@@ -32,7 +33,7 @@ abstract class AbstractController extends ActionController
      * Survey Repository
      *
      * @var \Pixelant\PxaSurvey\Domain\Repository\SurveyRepository
-     * @inject
+     * @Inject()
      */
     protected $surveyRepository = null;
 
@@ -40,7 +41,7 @@ abstract class AbstractController extends ActionController
      * User Answer Repository
      *
      * @var \Pixelant\PxaSurvey\Domain\Repository\UserAnswerRepository
-     * @inject
+     * @Inject()
      */
     protected $userAnswerRepository = null;
 
@@ -48,7 +49,7 @@ abstract class AbstractController extends ActionController
      * Answer Repository
      *
      * @var \Pixelant\PxaSurvey\Domain\Repository\AnswerRepository
-     * @inject
+     * @Inject()
      */
     protected $answerRepository = null;
 
@@ -56,7 +57,7 @@ abstract class AbstractController extends ActionController
      * Frontend User Repository
      *
      * @var \TYPO3\CMS\Extbase\Domain\Repository\FrontendUserRepository
-     * @inject
+     * @Inject()
      */
     protected $frontendUserRepository = null;
 
