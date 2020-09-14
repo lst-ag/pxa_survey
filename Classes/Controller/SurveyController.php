@@ -109,10 +109,13 @@ class SurveyController extends AbstractController
      * answer from user survey
      *
      * @param Survey $survey
-     * @param Question $currentQuestion
+     * @param Question|null $currentQuestion
+     * @throws \TYPO3\CMS\Extbase\Mvc\Exception\NoSuchArgumentException
      * @throws \TYPO3\CMS\Extbase\Mvc\Exception\StopActionException
-     * @validate $survey \Pixelant\PxaSurvey\Domain\Validation\Validator\SurveyAnswerValidator
-     * @validate $survey \Pixelant\PxaSurvey\Domain\Validation\Validator\ReCaptchaValidator
+     * @throws \TYPO3\CMS\Extbase\Mvc\Exception\UnsupportedRequestTypeException
+     * @throws \TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException
+     * @TYPO3\CMS\Extbase\Annotation\Validate("Pixelant\PxaSurvey\Domain\Validation\Validator\SurveyAnswerValidator", param="survey")
+     * @TYPO3\CMS\Extbase\Annotation\Validate("Pixelant\PxaSurvey\Domain\Validation\Validator\ReCaptchaValidator", param="survey")
      */
     public function answerAction(Survey $survey, Question $currentQuestion = null)
     {
